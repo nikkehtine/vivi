@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define ARRAY_LEN(xs) sizeof(xs) / sizeof(xs[0])
 
