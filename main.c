@@ -35,6 +35,9 @@ int main(int argc, char **argv) {
 
   AttachAudioStreamProcessor(music.stream, callback);
 
+  uint8_t volume = 50;
+  char volume_str[4];
+
   float time_played = 0.0f;
   float time_length = 0.0f;
   float time_duration = 0.0f;
@@ -53,6 +56,19 @@ int main(int argc, char **argv) {
         ResumeMusicStream(music);
     }
 
+    if (IsKeyPressed(KEY_UP)) {
+      volume += 5;
+      if (volume > 200)
+        volume = 200;
+      SetMusicVolume(music, (float)volume / 100);
+    }
+    if (IsKeyPressed(KEY_DOWN)) {
+      volume -= 5;
+      if (volume > 200)
+        volume = 0;
+      SetMusicVolume(music, (float)volume / 100);
+    }
+
     // Update the counters
     time_played = GetMusicTimePlayed(music);
     time_length = GetMusicTimeLength(music);
@@ -63,6 +79,8 @@ int main(int argc, char **argv) {
     sprintf(time_played_str, "%.2f", time_played);
     sprintf(time_length_str, "%.2f", time_length);
     sprintf(time_duration_str, "%.2f", time_duration);
+
+    sprintf(volume_str, "%d", volume);
 
     // Draw
     BeginDrawing();
@@ -89,6 +107,8 @@ int main(int argc, char **argv) {
     DrawText(time_played_str, 1, h - 24, 20, RAYWHITE);
     DrawText(time_duration_str, w / 2 - 10, h - 24, 20, RAYWHITE);
     DrawText(time_length_str, w - 64, h - 24, 20, RAYWHITE);
+
+    DrawText(volume_str, w - 34, 0, 20, BLUE);
 
     EndDrawing();
   }
