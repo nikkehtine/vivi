@@ -1,22 +1,37 @@
 #include <raylib.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#define ARRAY_LEN(xs) sizeof(xs) / sizeof(xs[0])
+
+uint16_t global_frames[1024] = {0};
+size_t global_frames_count = 0;
 
 void callback(void *bufferData, unsigned int frames) {
-  (void)bufferData;
-  (void)frames;
+  if (frames > ARRAY_LEN(global_frames) / 2) {
+    frames = ARRAY_LEN(global_frames) / 2;
+  }
+  memcpy(global_frames, bufferData, sizeof(int16_t) * frames * 2);
+  global_frames_count = frames;
 }
 
 int main(int argc, char **argv) {
-  const int w = 800;
-  const int h = 450;
+  const int init_w = 800;
+  const int init_h = 450;
   const char *title = "vivi";
-  InitWindow(w, h, title);
-  SetTargetFPS(60);
+  InitWindow(init_w, init_h, title);
+  SetTargetFPS(30);
   InitAudioDevice();
 
   Music music = LoadMusicStream("assets/JNATHYN - Genesis.wav");
   PlayMusicStream(music);
   SetMusicVolume(music, 0.5f);
+
+  printf("music.frameCount = %u\n", music.frameCount);
+  printf("music.stream.sampleRate = %u\n", music.stream.sampleRate);
+  printf("music.stream.sampleSize = %u\n", music.stream.sampleSize);
+  printf("music.stream.channels = %u\n", music.stream.channels);
 
   AttachAudioStreamProcessor(music.stream, callback);
 
@@ -54,9 +69,26 @@ int main(int argc, char **argv) {
 
     ClearBackground(BLACK);
 
-    DrawText(time_played_str, 380, 170, 20, RAYWHITE);
-    DrawText(time_length_str, 380, 200, 20, RAYWHITE);
-    DrawText(time_duration_str, 380, 230, 20, RAYWHITE);
+    int w = GetRenderWidth();
+    int h = GetRenderHeight();
+
+    float cell_width = (float)GetRenderWidth() / global_frames_count;
+    for (size_t i = 0; i < global_frames_count; ++i) {
+      int16_t sample = *(int16_t *)&global_frames[i];
+      if (sample > 0) {
+        float t = (float)sample / INT16_MAX;
+        DrawRectangle(i * cell_width, h / 2 - h / 2 * t, cell_width,
+                      h / 2 + (h / 2 * t), RED);
+      } else {
+        float t = (float)sample / INT16_MIN;
+        DrawRectangle(i * cell_width, h / 2, cell_width, h / 2 - (h / 2 * t),
+                      RED);
+      }
+    }
+
+    DrawText(time_played_str, 1, h - 24, 20, RAYWHITE);
+    DrawText(time_duration_str, w / 2 - 10, h - 24, 20, RAYWHITE);
+    DrawText(time_length_str, w - 64, h - 24, 20, RAYWHITE);
 
     EndDrawing();
   }
